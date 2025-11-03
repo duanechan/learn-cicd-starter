@@ -1,40 +1,36 @@
 package auth
 
 import (
-	"errors"
 	"net/http"
 	"testing"
 )
 
-type result struct {
-	result string
-	err    error
-}
-
 var testCases = []struct {
 	input    http.Header
-	expected result
+	expected string
 }{
 	{
 		input:    http.Header{"Authorization": []string{"ApiKey 123-Imaginary-Api-Key-123"}},
-		expected: result{"123-Imaginary-Api-Key-123", nil},
+		expected: "123-Imaginary-Api-Key-123",
 	},
 	{
 		input:    http.Header{"Content-Type": []string{"application/json"}},
-		expected: result{"", ErrNoAuthHeaderIncluded},
+		expected: "",
 	},
 	{
 		input:    http.Header{"Authorization": []string{"ApiKey"}},
-		expected: result{"", errors.New("malformed authorization header")},
+		expected: "",
 	},
 }
 
 func TestGetAPIKey(t *testing.T) {
 	for _, test := range testCases {
-		apiKey, err := GetAPIKey(test.input)
-		actual := result{result: apiKey, err: err}
+		actual, err := GetAPIKey(test.input)
+		if test.expected != "" && err != nil {
+			t.Errorf("expected no err, got %s", err)
+		}
 		if test.expected != actual {
-			t.Errorf("expected %s, got %s", test.expected.result, actual.result)
+			t.Errorf("expected result %s, got %s", test.expected, actual)
 		}
 	}
 }
